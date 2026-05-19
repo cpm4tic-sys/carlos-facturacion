@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Facturación · Carlos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --accent: #00e5a0;
+    --accent2: #5b6ef5;
+    --warn: #f5a623;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --card: #15151f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* GLOW BLOBS */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -200px; }
+  .blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; left: -150px; }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #000;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* SECTIONS */
+  section { position: relative; z-index: 1; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2rem 4rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    color: var(--accent);
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    width: fit-content;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 560px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,160,0.3); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 400;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--muted); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem;
+  }
+
+  .stats-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.2rem;
+  }
+
+  /* COMO FUNCIONA */
+  .section-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 6rem 2rem;
+  }
+
+  .section-tag {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    max-width: 520px;
+    margin-bottom: 3.5rem;
+  }
+
+  /* STEPS */
+  .steps {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+  .step:hover { border-color: rgba(0,229,160,0.3); }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--border);
+    line-height: 1;
+    min-width: 3rem;
+  }
+
+  .step-title {
+    font-weight: 500;
+    font-size: 1.05rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .step-desc { color: var(--muted); font-size: 0.9rem; }
+
+  /* PRECIOS */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .price-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .price-card:hover { transform: translateY(-4px); border-color: rgba(0,229,160,0.2); }
+
+  .price-card.featured {
+    border-color: var(--accent);
+    background: rgba(0,229,160,0.04);
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.25rem 0.9rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .price-name {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .price-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .price-amount span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .price-desc {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    min-height: 2.5rem;
+  }
+
+  .price-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 2rem;
+  }
+
+  .price-features li {
+    font-size: 0.88rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+  }
+
+  .price-features li::before {
+    content: '✓';
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .price-btn {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .price-card.featured .price-btn {
+    background: var(--accent);
+    color: #000;
+  }
+  .price-card.featured .price-btn:hover { opacity: 0.85; }
+
+  .price-card:not(.featured) .price-btn {
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .price-card:not(.featured) .price-btn:hover { border-color: var(--muted); }
+
+  /* SOBRE MI */
+  .about-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  .about-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .about-role {
+    color: var(--accent);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .about-text {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.8;
+  }
+
+  .about-text strong { color: var(--text); }
+
+  /* AVISO PRINCIPIANTE */
+  .honest-box {
+    background: rgba(245,166,35,0.06);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .honest-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  .honest-text {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .honest-text strong { color: var(--warn); }
+
+  /* LEGAL */
+  .legal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .legal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+  }
+
+  .legal-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+  .legal-title { font-weight: 500; margin-bottom: 0.4rem; font-size: 0.95rem; }
+  .legal-desc { color: var(--muted); font-size: 0.83rem; line-height: 1.6; }
+
+  /* CONTACT */
+  .contact-box {
+    background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(91,110,245,0.08));
+    border: 1px solid rgba(0,229,160,0.15);
+    border-radius: 16px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+  }
+
+  .contact-box h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .contact-box p {
+    color: var(--muted);
+    margin-bottom: 2rem;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .email-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: #000;
+    padding: 1rem 2.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .email-link:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,160,0.3); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  @media (max-width: 600px) {
+    .about-box { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <div class="nav-logo">Carlos<span>·</span>Facturación</div>
+  <a href="mailto:cpm4tic@gmail.com" class="nav-cta">Contactar →</a>
+</nav>
+
+<!-- HERO -->
+<section>
+  <div class="hero">
+    <div class="hero-badge">Disponible ahora · Pequeñas empresas y autónomos</div>
+    <h1>Tus facturas,<br><em>organizadas solas.</em></h1>
+    <p>Subes tus PDFs, yo genero un panel visual con todos tus números: facturación, gastos, IVA, beneficio. Sin Excel, sin lío.</p>
+    <div class="hero-actions">
+      <a href="mailto:cpm4tic@gmail.com" class="btn-primary">Pedir información →</a>
+      <a href="#como-funciona" class="btn-secondary">Ver cómo funciona</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-num">0 €</div>
+      <div class="stat-label">Sin comisiones ocultas</div>
+    </div>
+    <div>
+      <div class="stat-num">&lt;24h</div>
+      <div class="stat-label">Tiempo de entrega</div>
+    </div>
+    <div>
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Datos en tu poder</div>
+    </div>
+    <div>
+      <div class="stat-num">RGPD</div>
+      <div class="stat-label">Cumplimiento UE</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMO FUNCIONA -->
+<section id="como-funciona">
+  <div class="section-wrap">
+    <div class="section-tag">El proceso</div>
+    <h2 class="section-title">Tan sencillo<br>como enviar un email</h2>
+    <p class="section-sub">No necesitas instalar nada ni saber de tecnología. Yo me encargo de todo.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div>
+          <div class="step-title">Me mandas tus facturas en PDF</div>
+          <div class="step-desc">Por email, WhatsApp o como prefieras. Facturas emitidas y/o recibidas del mes.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div>
+          <div class="step-title">El programa las lee y extrae los datos</div>
+          <div class="step-desc">Automáticamente identifica importes, fechas, IVA, IRPF y clientes. Sin tocar nada a mano.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div>
+          <div class="step-title">Te entrego tu dashboard listo</div>
+          <div class="step-desc">Un panel visual con todos tus números organizados. Lo abres en el navegador y listo.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- PRECIOS -->
+<section id="precios">
+  <div class="section-wrap">
+    <div class="section-tag">Precios</div>
+    <h2 class="section-title">Sin sorpresas,<br>sin letra pequeña</h2>
+    <p class="section-sub">Elige el formato que mejor se adapte a tu negocio. Sin permanencia, sin contratos largos.</p>
+
+    <div class="pricing-grid">
+
+      <div class="price-card">
+        <div class="price-name">Básico</div>
+        <div class="price-amount">50€ <span>/mes</span></div>
+        <div class="price-desc">Ideal para autónomos con pocas facturas al mes</div>
+        <ul class="price-features">
+          <li>Hasta 20 facturas/mes</li>
+          <li>Dashboard mensual en HTML</li>
+          <li>Entrega en menos de 24h</li>
+          <li>Soporte por email</li>
+        </ul>
+        <a href="mailto:cpm4tic@gmail.com?subject=Consulta plan Básico" class="price-btn">Empezar →</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="featured-badge">⭐ Más popular</div>
+        <div class="price-name">Profesional</div>
+        <div class="price-amount">80€ <span>/mes</span></div>
+        <div class="price-desc">Para pequeñas empresas con más volumen de facturación</div>
+        <ul class="price-features">
+          <li>Hasta 60 facturas/mes</li>
+          <li>Dashboard mensual en HTML</li>
+          <li>Entrega en menos de 12h</li>
+          <li>Histórico acumulado</li>
+          <li>Soporte prioritario</li>
+        </ul>
+        <a href="mailto:cpm4tic@gmail.com?subject=Consulta plan Profesional" class="price-btn">Empezar →</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-name">Instalación única</div>
+        <div class="price-amount">200€ <span>pago único</span></div>
+        <div class="price-desc">Te instalo el programa en tu ordenador y tú lo usas cuando quieras</div>
+        <ul class="price-features">
+          <li>Instalación en tu PC</li>
+          <li>Manual de uso incluido</li>
+          <li>Sesión de formación (1h)</li>
+          <li>1 mes de soporte incluido</li>
+        </ul>
+        <a href="mailto:cpm4tic@gmail.com?subject=Consulta instalación única" class="price-btn">Consultar →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SOBRE MI -->
+<section id="sobre-mi">
+  <div class="section-wrap">
+    <div class="section-tag">Quién soy</div>
+    <h2 class="section-title">Un poco<br>sobre mí</h2>
+
+    <div class="about-box">
+      <div class="avatar">C</div>
+      <div>
+        <div class="about-name">Carlos</div>
+        <div class="about-role">Desarrollador de herramientas de automatización</div>
+        <div class="about-text">
+          Desarrollo herramientas con <strong>inteligencia artificial</strong> para ayudar a pequeñas empresas y autónomos a ahorrar tiempo en tareas administrativas. El dashboard de facturación es una de mis primeras soluciones, creada específicamente para que cualquier negocio pueda tener sus números claros sin necesitar un contable o un programa caro.
+        </div>
+      </div>
+    </div>
+
+    <div class="honest-box">
+      <div class="honest-icon">💬</div>
+      <div class="honest-text">
+        <strong>Soy transparente:</strong> estoy empezando en este sector y por eso ofrezco precios muy competitivos. A cambio, me comprometo a responder rápido, entregar lo prometido y mejorar continuamente el servicio con tu feedback. Si algo no sale bien, lo repito hasta que esté correcto.
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- LEGAL RGPD -->
+<section id="privacidad">
+  <div class="section-wrap">
+    <div class="section-tag">Protección de datos</div>
+    <h2 class="section-title">Tus datos,<br>seguros y protegidos</h2>
+    <p class="section-sub">Cumplo con el Reglamento General de Protección de Datos (RGPD) de la Unión Europea.</p>
+
+    <div class="legal-grid">
+      <div class="legal-card">
+        <div class="legal-icon">🔒</div>
+        <div class="legal-title">Solo uso tus datos para el servicio</div>
+        <div class="legal-desc">Las facturas que me envías se usan únicamente para generar tu dashboard. No las comparto con terceros ni las uso para ningún otro fin.</div>
+      </div>
+      <div class="legal-card">
+        <div class="legal-icon">🗑️</div>
+        <div class="legal-title">Eliminación a petición</div>
+        <div class="legal-desc">Puedes pedirme en cualquier momento que elimine todos tus archivos y datos. Lo haré en un plazo máximo de 48 horas.</div>
+      </div>
+      <div class="legal-card">
+        <div class="legal-icon">📋</div>
+        <div class="legal-title">Acuerdo de confidencialidad</div>
+        <div class="legal-desc">Antes de empezar firmaremos un acuerdo de encargado de tratamiento (RGPD Art. 28) que protege legalmente tu información fiscal.</div>
+      </div>
+      <div class="legal-card">
+        <div class="legal-icon">🇪🇺</div>
+        <div class="legal-title">Datos en la UE</div>
+        <div class="legal-desc">Toda la información se procesa y almacena dentro del territorio de la Unión Europea, sin transferencias internacionales.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="section-wrap">
+    <div class="contact-box">
+      <h2>¿Hablamos?</h2>
+      <p>Cuéntame cuántas facturas tienes al mes y te digo qué plan te conviene. Sin compromiso.</p>
+      <a href="mailto:cpm4tic@gmail.com" class="email-link">
+        ✉️ cpm4tic@gmail.com
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Carlos · Servicio de Dashboard de Facturación · Córdoba, España</p>
+  <p style="margin-top:0.4rem;">Tratamiento de datos conforme al RGPD (UE) 2016/679 · <a href="mailto:cpm4tic@gmail.com" style="color:var(--accent);text-decoration:none;">Solicitar info sobre tus datos</a></p>
+</footer>
+
+</body>
+</html>
