@@ -650,7 +650,7 @@ footer a:hover { text-decoration: underline; }
           Este dashboard de facturación es mi primer proyecto real, creado para demostrar que la IA puede resolver problemas cotidianos de cualquier negocio. Lo he construido, probado y refinado con feedback directo de profesionales del sector.
         </p>
         <div class="about-social">
-          <a href="https://linkedin.com" target="_blank" class="social-link linkedin">💼 LinkedIn</a>
+          <a href="https://www.linkedin.com/in/cpenetic-cpmtic-18a201410" target="_blank" class="social-link linkedin">💼 LinkedIn</a>
           <a href="mailto:cpm4tic@gmail.com" class="social-link">✉️ Email</a>
         </div>
       </div>
@@ -707,7 +707,7 @@ footer a:hover { text-decoration: underline; }
           <a href="mailto:cpm4tic@gmail.com" class="contact-item">
             <span class="ci-icon">✉️</span> cpm4tic@gmail.com
           </a>
-          <a href="https://linkedin.com" target="_blank" class="contact-item">
+          <a href="https://www.linkedin.com/in/cpenetic-cpmtic-18a201410" target="_blank" class="contact-item">
             <span class="ci-icon">💼</span> LinkedIn — Carlos
           </a>
         </div>
@@ -879,7 +879,7 @@ function sendModal() {
     '\n\nGracias.'
   );
 
-  window.location.href = 'mailto:cpm4tic@gmail.com?subject=' + subject + '&body=' + body;
+  const gmailUrl = 'https://mail.google.com/mail/?view=cm&to=cpm4tic@gmail.com&su=' + subject + '&body=' + body; window.open(gmailUrl, '_blank');
   closeModal();
 }
 
@@ -902,7 +902,7 @@ function sendForm() {
     '\n\nGracias.'
   );
 
-  window.location.href = 'mailto:cpm4tic@gmail.com?subject=' + subject + '&body=' + body;
+  const gmailUrl = 'https://mail.google.com/mail/?view=cm&to=cpm4tic@gmail.com&su=' + subject + '&body=' + body; window.open(gmailUrl, '_blank');
   document.getElementById('contact-form').style.display = 'none';
   document.getElementById('form-success').style.display = 'block';
 }
