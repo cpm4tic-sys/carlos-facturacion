@@ -793,6 +793,21 @@ footer a:hover { text-decoration: underline; }
   </div>
 </section>
 
+<!-- FOOTER CTA -->
+<section style="position:relative;z-index:1;background:var(--surface);border-top:1px solid var(--border);">
+  <div style="max-width:960px;margin:0 auto;padding:4rem 2rem;text-align:center;">
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-bottom:0.8rem;">// ¿hablamos?</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;margin-bottom:1rem;">¿Te interesa el servicio?<br><em style="font-style:italic;color:var(--accent);">Contáctame aquí.</em></h2>
+    <p style="color:var(--muted2);font-size:0.95rem;max-width:460px;margin:0 auto 2rem;">Escríbeme directamente al siguiente correo. Respondo siempre en menos de 24 horas.</p>
+    <div style="display:inline-flex;align-items:center;gap:0.8rem;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:0.9rem 1.5rem;margin-bottom:1rem;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--text);">cpm4tic@gmail.com</span>
+      <button onclick="copyEmail()" id="copy-btn" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:0.4rem 0.9rem;font-size:0.8rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;">Copiar</button>
+    </div>
+    <br>
+    <a href="mailto:cpm4tic@gmail.com" style="display:inline-flex;align-items:center;gap:0.5rem;color:var(--muted2);font-size:0.85rem;text-decoration:none;border:1px solid var(--border);padding:0.5rem 1.2rem;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted2)'">✉️ Abrir en cliente de correo</a>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <p>© 2026 Carlos · Dashboard de Facturación con IA · Córdoba, España</p>
@@ -838,12 +853,26 @@ footer a:hover { text-decoration: underline; }
       <label class="form-label">Mensaje adicional</label>
       <textarea id="modal-message" class="form-textarea" placeholder="Cualquier detalle que quieras añadir..."></textarea>
     </div>
-    <button class="form-submit" onclick="sendModal()">Enviar solicitud →</button>
+    <button class="form-submit" id="modal-submit-btn" onclick="sendModal()">Enviar solicitud →</button>
+    <div id="modal-success" style="display:none;text-align:center;padding:1rem;color:var(--accent);font-size:0.9rem;">✅ Solicitud enviada. Te respondo en menos de 24h.</div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
+emailjs.init('OBm3UXNuZ9SU48DEg');
+
+const SERVICE_ID = 'service_l8oo19f';
+const TEMPLATE_ID = 'template_rtpuxqn';
+
 function openPriceModal(plan) {
+  // Reset modal
+  document.getElementById('modal-name').value = '';
+  document.getElementById('modal-company').value = '';
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-message').value = '';
+  document.getElementById('modal-success').style.display = 'none';
+  document.getElementById('modal-submit-btn').style.display = 'block';
   document.getElementById('modal-plan').value = plan;
   document.getElementById('price-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -868,19 +897,27 @@ function sendModal() {
 
   if (!name || !email) { alert('Por favor rellena tu nombre y email.'); return; }
 
-  const subject = encodeURIComponent('Solicitud de plan: ' + plan);
-  const body = encodeURIComponent(
-    'Hola Carlos,\n\nMe interesa el plan: ' + plan +
-    '\n\nNombre: ' + name +
-    '\nEmpresa: ' + (company || 'No indicada') +
-    '\nEmail: ' + email +
-    '\nFacturas al mes: ' + invoices +
-    '\n\nMensaje:\n' + (message || 'Sin mensaje adicional.') +
-    '\n\nGracias.'
-  );
+  const btn = document.getElementById('modal-submit-btn');
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
 
-  const gmailUrl = 'https://mail.google.com/mail/?view=cm&to=cpm4tic@gmail.com&su=' + subject + '&body=' + body; window.open(gmailUrl, '_blank');
-  closeModal();
+  emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    from_name: name,
+    from_email: email,
+    company: company || 'No indicada',
+    plan: plan,
+    invoices: invoices,
+    message: message || 'Sin mensaje adicional.',
+    to_email: 'cpm4tic@gmail.com'
+  }).then(() => {
+    btn.style.display = 'none';
+    document.getElementById('modal-success').style.display = 'block';
+    setTimeout(closeModal, 3000);
+  }).catch(() => {
+    btn.textContent = 'Enviar solicitud →';
+    btn.disabled = false;
+    alert('Error al enviar. Por favor escríbeme directamente a cpm4tic@gmail.com');
+  });
 }
 
 function sendForm() {
@@ -892,19 +929,38 @@ function sendForm() {
 
   if (!name || !email) { alert('Por favor rellena tu nombre y email.'); return; }
 
-  const subject = encodeURIComponent('Contacto desde web: ' + (plan || 'Consulta general'));
-  const body = encodeURIComponent(
-    'Hola Carlos,\n\nNombre: ' + name +
-    '\nEmpresa: ' + (company || 'No indicada') +
-    '\nEmail: ' + email +
-    '\nPlan de interés: ' + (plan || 'No especificado') +
-    '\n\nMensaje:\n' + (message || 'Sin mensaje.') +
-    '\n\nGracias.'
-  );
+  const btn = document.querySelector('#contact-form .form-submit');
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
 
-  const gmailUrl = 'https://mail.google.com/mail/?view=cm&to=cpm4tic@gmail.com&su=' + subject + '&body=' + body; window.open(gmailUrl, '_blank');
-  document.getElementById('contact-form').style.display = 'none';
-  document.getElementById('form-success').style.display = 'block';
+  emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    from_name: name,
+    from_email: email,
+    company: company || 'No indicada',
+    plan: plan || 'No especificado',
+    invoices: '-',
+    message: message || 'Sin mensaje.',
+    to_email: 'cpm4tic@gmail.com'
+  }).then(() => {
+    document.getElementById('contact-form').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
+  }).catch(() => {
+    btn.textContent = 'Enviar mensaje →';
+    btn.disabled = false;
+    alert('Error al enviar. Por favor escríbeme directamente a cpm4tic@gmail.com');
+  });
+}
+
+function copyEmail() {
+  navigator.clipboard.writeText('cpm4tic@gmail.com').then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copiado';
+    btn.style.background = '#00b37a';
+    setTimeout(() => {
+      btn.textContent = 'Copiar';
+      btn.style.background = 'var(--accent)';
+    }, 2000);
+  });
 }
 </script>
 
